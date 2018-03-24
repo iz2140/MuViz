@@ -1,6 +1,6 @@
 #include <atomic>
-#include <condition_variable>
 #include <chrono>
+#include <condition_variable>
 #include <cstdio>
 #include <memory>
 #include <mutex>
@@ -14,7 +14,6 @@
 
 #include <Functiondiscoverykeys_devpkey.h>
 
-//#include <IUnityInterface.h>
 #define UNITY_INTERFACE_API __stdcall
 #define UNITY_INTERFACE_EXPORT __declspec(dllexport)
 
@@ -67,7 +66,7 @@ void ThreadProc(uint32_t device_index) {
   if (!device_enumerator) return;
 
   AutoPtr<IMMDevice> device;
-  
+
   if (device_index == ~0u) {
     CHK(device_enumerator->GetDefaultAudioEndpoint(
         EDataFlow::eRender, ERole::eMultimedia, &device));
@@ -115,7 +114,8 @@ void ThreadProc(uint32_t device_index) {
         samples.insert(samples.end(), sample_data, sample_data + frames_read);
 
         if (samples.size() > kMaxBufferSize) {
-          auto num_to_remove = samples.size() - kMaxBufferSize + kMaxBufferSize/2;
+          auto num_to_remove =
+              samples.size() - kMaxBufferSize + kMaxBufferSize / 2;
           samples.erase(samples.begin(), samples.begin() + num_to_remove);
         }
       }
@@ -145,7 +145,8 @@ extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
 Read(uint32_t sample_count, float* out_samples) {
   std::unique_lock<std::mutex> lock{samples_mutex};
   auto wait_result = samples_condition_variable.wait_for(
-    lock, std::chrono::milliseconds{ 1000 }, [&]() { return quit || sample_count <= samples.size(); });
+      lock, std::chrono::milliseconds{1000},
+      [&]() { return quit || sample_count <= samples.size(); });
   if (!wait_result) return;
 
   memcpy(out_samples, samples.data(), sample_count * sizeof(float));
@@ -164,6 +165,7 @@ UnityPluginLoad(void* /*unityInterfaces*/) {
 
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API UnityPluginUnload() {
   Stop();
+  CoUninitialize();
 }
 
 // void GetEndpoints() {
