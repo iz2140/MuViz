@@ -5,20 +5,27 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 public class LoopbackTest : MonoBehaviour {
 
-  
-  void PCMReaderCallback(float[] data) {
+  int i = 0;
+  void PCMReaderCallback(float[] data)
+  {
+  //  for (var j = 0; j < data.Length; ++j)
+  //  { 
+  //    data[j] = Mathf.Sin(i++ / 44100f * 2f * Mathf.PI * 440f);
+
+  //  }
+
     GCHandle pinnedArray = GCHandle.Alloc(data, GCHandleType.Pinned);
     IntPtr pointer = pinnedArray.AddrOfPinnedObject();
     NativeApi.Read((uint)data.Length, pointer);
 
     pinnedArray.Free();
 
-    
+
   }
 
   // Use this for initialization
   void Start () {
-    NativeApi.Start(1);
+    NativeApi.Start(2u);
     var audioSource = GetComponent<AudioSource>();
     audioSource.clip = AudioClip.Create("loopback", int.MaxValue, 1, 44100, true, PCMReaderCallback);
     audioSource.Play();
@@ -30,7 +37,8 @@ public class LoopbackTest : MonoBehaviour {
 
   }
 
-  struct NativeApi {
+  struct NativeApi
+  {
     [DllImport("loopback_recorder")]
     public static extern void Start(uint device_index);
 

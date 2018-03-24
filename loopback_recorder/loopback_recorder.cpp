@@ -1,5 +1,6 @@
 #include <atomic>
 #include <condition_variable>
+#include <chrono>
 #include <cstdio>
 #include <memory>
 #include <mutex>
@@ -13,7 +14,9 @@
 
 #include <Functiondiscoverykeys_devpkey.h>
 
-#include <IUnityInterface.h>
+//#include <IUnityInterface.h>
+#define UNITY_INTERFACE_API __stdcall
+#define UNITY_INTERFACE_EXPORT __declspec(dllexport)
 
 #define __CHK(x, ret)                                                     \
   {                                                                       \
@@ -27,7 +30,7 @@
 #define CHK(x) __CHK(x, /**/)
 #define CHK_NULL(x) __CHK(x, nullptr)
 
-static constexpr auto kMaxBufferSize = 10000u;
+static constexpr auto kMaxBufferSize = 1000000u;
 static constexpr auto kSamplesPerSecond = 44100u;
 static constexpr WAVEFORMATEX kOutputFormat{
     WAVE_FORMAT_IEEE_FLOAT,
@@ -64,7 +67,7 @@ void ThreadProc(uint32_t device_index) {
   if (!device_enumerator) return;
 
   AutoPtr<IMMDevice> device;
-
+  
   if (device_index == ~0u) {
     CHK(device_enumerator->GetDefaultAudioEndpoint(
         EDataFlow::eRender, ERole::eMultimedia, &device));
@@ -112,7 +115,7 @@ void ThreadProc(uint32_t device_index) {
         samples.insert(samples.end(), sample_data, sample_data + frames_read);
 
         if (samples.size() > kMaxBufferSize) {
-          auto num_to_remove = samples.size() - kMaxBufferSize;
+          auto num_to_remove = samples.size() - kMaxBufferSize + kMaxBufferSize/2;
           samples.erase(samples.begin(), samples.begin() + num_to_remove);
         }
       }
@@ -128,6 +131,7 @@ void ThreadProc(uint32_t device_index) {
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API Stop() {
   quit = true;
   if (thread.joinable()) thread.join();
+  samples.clear();
 }
 
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
@@ -140,8 +144,9 @@ Start(uint32_t device_index) {
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
 Read(uint32_t sample_count, float* out_samples) {
   std::unique_lock<std::mutex> lock{samples_mutex};
-  samples_condition_variable.wait(
-      lock, [&]() { return quit || sample_count <= samples.size(); });
+  auto wait_result = samples_condition_variable.wait_for(
+    lock, std::chrono::milliseconds{ 1000 }, [&]() { return quit || sample_count <= samples.size(); });
+  if (!wait_result) return;
 
   memcpy(out_samples, samples.data(), sample_count * sizeof(float));
 
@@ -149,7 +154,7 @@ Read(uint32_t sample_count, float* out_samples) {
 }
 
 extern "C" void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API
-UnityPluginLoad(IUnityInterfaces* /*unityInterfaces*/) {
+UnityPluginLoad(void* /*unityInterfaces*/) {
   CHK(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED));
   CHK(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
                        IID_PPV_ARGS(&device_enumerator)));
