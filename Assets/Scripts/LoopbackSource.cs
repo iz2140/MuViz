@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
-public class LoopbackTest : MonoBehaviour {
+public class LoopbackSource : MonoBehaviour {
 
   private const string PLAYER_PREFS_DEVICE_INDEX = "LOOPBACK_DEVICE_INDEX";
   private uint deviceIndex;
@@ -26,8 +26,6 @@ public class LoopbackTest : MonoBehaviour {
 
 
   void Update() {
-    var audioSource = GetComponent<AudioSource>();
-
     if (Input.GetKeyDown(KeyCode.Space)) {
       ++deviceIndex;
 

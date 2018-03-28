@@ -42,12 +42,12 @@
       sampler2D _MainTex;
       sampler2D intensities0;
       sampler2D intensities1;
-      float sampleCount;
+      float sampleCount = 256;
       float f;
       float lineBoost;
 
       float F(float t) {
-        return exp(-t*f);
+        return exp(-t*f*.5);
       }
 
 
@@ -61,14 +61,20 @@
         color = (color * (6.2 * color + .5)) / (color * (6.2 * color + 1.7) + 0.06);
         return color;
       }
+      float Sample(sampler2D s, float x) {
+        float f = 2.0 * tex2D(s, float2(x + 0.0 / sampleCount, 0.5)).r 
+          + tex2D(s, float2(x - 1.0 / sampleCount, 0.5)).r
+          + tex2D(s, float2(x - 0.0 / sampleCount, 0.5)).r;
+        return f / 4;
+      }
 
       fixed4 frag (v2f i) : SV_Target
       {
         float inverseSampleCount = 1.0 / sampleCount;
-        float intensity0 = .7*tex2D(intensities0, float2(lerp(0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x), 0.5)).r;
-        float intensity1 = .7*tex2D(intensities1, float2(lerp(0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x), 0.5)).r;
-        float intensity2 = .7*tex2D(intensities0, float2(lerp(0.5 + 0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x), 0.5)).r;
-        float intensity3 = .7*tex2D(intensities1, float2(lerp(0.5 + 0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x), 0.5)).r;
+      float a = saturate(0.5 - abs(0.5 - i.uv.x)) / 0.5;
+       a = .7 * pow(smoothstep(0.1, 0.9, a), .5);
+        float intensity0 = a*Sample(intensities0, lerp(0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x));
+        float intensity1 = a*Sample(intensities1, lerp(0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x));
 
         float y = i.uv.y * 2.0 - 1.0;
 
@@ -86,9 +92,15 @@
         //col.rgb = 1 - col.rgb;
         //col.rgb *= 0.0;
 
+        //f = lerp(f, dot(f, 1.0 / 3), 0.25);
+
         //float t = 0.5;
         //col.rgb += abs(i.uv.y - t);
-        return float4(f, 1);
+        float v = saturate(0.5 - distance(i.uv.x, 0.5))/.5;
+        v = smoothstep(0.05, .9, pow(v, 1.0));
+        //return v;
+        //return float4(f, 1);
+        return float4(v*f, 1);
       }
       ENDCG
     }
