@@ -71,7 +71,7 @@ Shader "Hidden/Lines"
       {
         float inverseSampleCount = 1.0 / sampleCount;
         float a = saturate(0.5 - abs(0.5 - i.uv.x)) / 0.5;
-        a = .7 * pow(smoothstep(0.1, 0.9, a), .5);
+        a = .7 * pow(smoothstep(0.05, 0.9, a), 1.5);
         float intensity0 = a*Sample(intensities0, lerp(0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x));
         float intensity1 = a*Sample(intensities1, lerp(0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x));
 
