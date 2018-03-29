@@ -209,13 +209,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   audioSource: {fileID: 1059967693}
   material: {fileID: 2100000, guid: 2b4fa8d486dfc794fa14409b337f7ba0, type: 2}
+  totalScaler: 50
+  totalDamp: 0.05
 --- !u!114 &931422703
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 931422697}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ff26db721962cdf4a8edcdfa9a767d2a, type: 3}
   m_Name: 
@@ -337,7 +339,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1059967692}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 73087e4ebd47c824397c615492404fa3, type: 3}
   m_Name: 

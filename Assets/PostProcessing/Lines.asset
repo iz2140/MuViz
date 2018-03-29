@@ -116,9 +116,9 @@ MonoBehaviour:
         neutralBlackIn: 0.02
         neutralWhiteIn: 10
         neutralBlackOut: 0
-        neutralWhiteOut: 13.3
-        neutralWhiteLevel: 6.8
-        neutralWhiteClip: 8.34
+        neutralWhiteOut: 16.1
+        neutralWhiteLevel: 8.6
+        neutralWhiteClip: 7.12
       basic:
         postExposure: 0
         temperature: 0
