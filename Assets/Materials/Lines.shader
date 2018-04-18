@@ -48,10 +48,9 @@ Shader "Hidden/Lines"
       float totalIntensity;
       float beats[4];
 
+	  //calculating where the line is - sort of "inverting" the line
       float F(float t) {
         return min(1 / (t*f*2.5), 15);
-
-        return  exp(-t * f*.5);
       }
 
 
@@ -60,8 +59,10 @@ Shader "Hidden/Lines"
         return a + b * cos(6.28318*(c*t + d));
       }
 
+	  //samples multiple times to smooth out the line
       float Sample(sampler2D s, float x) {
-        float f = 2.0 * tex2D(s, float2(x + 0.0 / sampleCount, 0.5)).r 
+		 // return cos(x * 10);
+        float f = 2.0 * tex2D(s, float2(x + 0.0 / sampleCount, 0.5)).r  //averaging
           + tex2D(s, float2(x - 1.0 / sampleCount, 0.5)).r
           + tex2D(s, float2(x - 0.0 / sampleCount, 0.5)).r;
         return f / 4;
@@ -72,16 +73,23 @@ Shader "Hidden/Lines"
         float inverseSampleCount = 1.0 / sampleCount;
         float a = saturate(0.5 - abs(0.5 - i.uv.x)) / 0.5;
         a = .7 * pow(smoothstep(0.05, 0.9, a), 1.5);
+
+		//this is taking left and right samples
         float intensity0 = a*Sample(intensities0, lerp(0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x));
         float intensity1 = a*Sample(intensities1, lerp(0.5 * inverseSampleCount, 1.0 - 0.5 * inverseSampleCount, i.uv.x));
 
+		//uv coordinates on the screen
+		//sets it so that y is -1 to 1
         float y = i.uv.y * 2.0 - 1.0;
 
+		//return i.uv.xyyy;
+		//_Time.y is regular time
+		//.5 is the offset
+
         float3 f = 0;
+		
         f += pal(float3(0.5,0.5,0.5),float3(0.5,0.5,0.5),float3(1.0,1.0,1.0),float3(0.0,0.33,0.67), _Time.y + 0.5) * F(abs(y - intensity0));
         f += pal(float3(0.5,0.5,0.5),float3(0.5,0.5,0.5),float3(1.0,1.0,1.0),float3(0.0,0.33,0.67), _Time.y) * F(abs(y - intensity1));
-        //f += pal(float3(0.5,0.5,0.5),float3(0.5,0.5,0.5),float3(1.0,1.0,1.0),float3(0.0,0.33,0.67), 0.5) * F(abs(y - intensity2));
-        //f += pal(float3(0.5,0.5,0.5),float3(0.5,0.5,0.5),float3(1.0,1.0,1.0),float3(0.0,0.33,0.67), 0.75) * F(abs(y - intensity3));
         f *= lineBoost * totalIntensity * 1.5;
         //f = filmicToneMapping(f * 10.0);
         //f /= 4.0;
@@ -94,13 +102,21 @@ Shader "Hidden/Lines"
 
         //float t = 0.5;
         //col.rgb += abs(i.uv.y - t);
-        float v = saturate(0.5 - distance(i.uv.x, 0.5))/.5;
+        
+		//v is a fadeout effect near sides
+		float v = saturate(0.5 - distance(i.uv.x, 0.5))/.5;
         v = smoothstep(0.05, .9, pow(v, 1.0));
+
+
         //return v;
         //return float4(f, 1);
 
-        
-        return float4(v*f, 1);
+		//return float4(1, 1, 1, 1);
+		//return pal(float3(0.5, 0.5, 0.5), float3(0.5, 0.5, 0.5), float3(1.0, 1.0, 1.0), float3(0.0, 0.33, 0.67), _Time.y + 0.5).xyzz;
+		
+		//f is the line color
+		//return f.xyzz;
+		return float4(v*f , 1);
       }
       ENDCG
     }
